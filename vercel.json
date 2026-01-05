@@ -1,9 +1,9 @@
 
 {
+  "version": 2,
+  "outputDirectory": ".",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
-  "framework": null,
-  "installCommand": "npm install --no-package-lock",
-  "buildCommand": "echo 'Ready'"
+  "cleanUrls": true
 }
