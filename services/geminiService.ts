@@ -1,8 +1,7 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Leader, MentorResponse } from "../types";
+import { Leader, MentorResponse } from "../types.ts";
 
-// Always use { apiKey: process.env.API_KEY } for initializing GoogleGenAI
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export async function summarizeProblem(problem: string): Promise<string> {
