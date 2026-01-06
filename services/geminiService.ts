@@ -3,25 +3,31 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Leader, MentorResponse } from "../types.ts";
 
 /**
- * Helper para obter a instância da IA com segurança.
- * Em ambientes de navegador (Vercel/Vite), process.env pode não estar disponível 
- * no escopo global imediatamente ou exigir verificação.
+ * Helper para obter a chave de API de forma segura em diferentes ambientes.
  */
-function getAiInstance() {
-  const apiKey = (typeof process !== 'undefined' && process.env?.API_KEY) 
-    ? process.env.API_KEY 
-    : '';
-    
-  if (!apiKey) {
-    console.warn("API_KEY não detectada. Certifique-se de configurá-la no painel do Vercel.");
+function getApiKey(): string {
+  try {
+    // Tenta obter do process.env (Vite/Vercel)
+    // @ts-ignore
+    const key = process.env.API_KEY || process.env.VITE_API_KEY;
+    if (key) return key;
+
+    // Fallback para window se estiver injetado globalmente
+    // @ts-ignore
+    return window.process?.env?.API_KEY || "";
+  } catch (e) {
+    return "";
   }
-  
+}
+
+function getAiInstance() {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    console.warn("Conselho: API_KEY não configurada no ambiente.");
+  }
   return new GoogleGenAI({ apiKey });
 }
 
-/**
- * Limpa blocos de código Markdown e caracteres invisíveis para garantir um JSON válido
- */
 const cleanJsonResponse = (text: string): string => {
   return text
     .replace(/```json/gi, '')
@@ -44,22 +50,9 @@ export async function summarizeProblem(problem: string): Promise<string> {
 }
 
 export async function generateLeaderAdvice(leader: Leader, problem: string): Promise<MentorResponse> {
-  const prompt = `Você é ${leader.name} (${leader.title}). Atue rigorosamente com sua voz, termos técnicos e filosofia.
-  
+  const prompt = `Você é ${leader.name} (${leader.title}). Atue rigorosamente com sua voz e filosofia.
   Desafio do Cliente: "${problem}".
-  
-  Sua resposta deve ser dividida nestes pontos, SEMPRE EM PORTUGUÊS DO BRASIL:
-  1. PENSAR: Seu modelo mental analítico.
-  2. AGIR: O primeiro passo tático imediato.
-  3. ESCREVER: Um princípio imutável para a cultura.
-  4. CRIAR: A oportunidade de disrupção oculta.
-  5. CITAR: Uma frase sua que encapsula a solução.
-  6. REFLETIR: Visão de longo prazo (10 anos).
-  7. MONTAR: Estrutura lógica (Passo 1, 2, 3).
-  8. ACONSELHAR: Um conselho direto e franco.
-  9. MANIFESTO E PLANO DE AÇÃO: Guia completo com MOVIMENTO DE CHOQUE (0-24h), MANOBRA TÁTICA (14 dias) e O MANIFESTO DE VITÓRIA.
-
-  Responda estritamente em JSON usando este schema:`;
+  Mantenha o tom de autoridade. Responda estritamente em JSON seguindo o schema solicitado.`;
 
   try {
     const ai = getAiInstance();
@@ -87,26 +80,22 @@ export async function generateLeaderAdvice(leader: Leader, problem: string): Pro
     });
 
     const rawText = response.text || "{}";
-    const cleanedText = cleanJsonResponse(rawText);
-    const result = JSON.parse(cleanedText);
+    const result = JSON.parse(cleanJsonResponse(rawText));
     
-    return {
-      leaderId: leader.id,
-      ...result
-    };
+    return { leaderId: leader.id, ...result };
   } catch (err) {
-    console.error(`Falha ao processar mentor ${leader.name}:`, err);
+    console.error(`Falha no mentor ${leader.name}:`, err);
     return {
       leaderId: leader.id,
-      thinking: "Análise estratégica em processamento profundo.",
-      acting: "Execute uma auditoria imediata dos seus recursos críticos.",
-      writing: "A disciplina é a alma da vitória.",
-      creating: "Busque a vantagem competitiva no ponto de menor resistência.",
-      quoting: "A vitória favorece os preparados.",
-      reflecting: "Este movimento definirá sua posição no mercado na próxima década.",
-      mounting: "1. Diagnóstico, 2. Estratégia, 3. Execução.",
-      advising: "Não hesite. A hesitação é o primeiro passo para a derrota.",
-      actionPlan: "Ação de choque recomendada para as próximas 24 horas."
+      thinking: "Minha análise está sendo processada.",
+      acting: "Execute uma revisão dos seus fundamentos.",
+      writing: "Mantenha a visão clara.",
+      creating: "Inove na execução.",
+      quoting: "A estratégia é a arte de focar.",
+      reflecting: "O futuro favorece os resilientes.",
+      mounting: "1. Diagnóstico, 2. Plano, 3. Ação.",
+      advising: "Não hesite diante da incerteza.",
+      actionPlan: "Ação imediata recomendada."
     };
   }
 }
