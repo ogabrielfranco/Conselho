@@ -1,9 +1,23 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { Leader, MentorResponse } from "../types.ts";
 
-// Inicialização segura para ambiente de produção (Vercel)
-// Assume-se que process.env.API_KEY está configurado no painel do Vercel
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+/**
+ * Helper para obter a instância da IA com segurança.
+ * Em ambientes de navegador (Vercel/Vite), process.env pode não estar disponível 
+ * no escopo global imediatamente ou exigir verificação.
+ */
+function getAiInstance() {
+  const apiKey = (typeof process !== 'undefined' && process.env?.API_KEY) 
+    ? process.env.API_KEY 
+    : '';
+    
+  if (!apiKey) {
+    console.warn("API_KEY não detectada. Certifique-se de configurá-la no painel do Vercel.");
+  }
+  
+  return new GoogleGenAI({ apiKey });
+}
 
 /**
  * Limpa blocos de código Markdown e caracteres invisíveis para garantir um JSON válido
@@ -17,6 +31,7 @@ const cleanJsonResponse = (text: string): string => {
 
 export async function summarizeProblem(problem: string): Promise<string> {
   try {
+    const ai = getAiInstance();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Analise este problema e resuma a essência estratégica em uma frase poderosa de no máximo 12 palavras em Português do Brasil: "${problem}"`,
@@ -47,6 +62,7 @@ export async function generateLeaderAdvice(leader: Leader, problem: string): Pro
   Responda estritamente em JSON usando este schema:`;
 
   try {
+    const ai = getAiInstance();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: prompt,
@@ -80,7 +96,6 @@ export async function generateLeaderAdvice(leader: Leader, problem: string): Pro
     };
   } catch (err) {
     console.error(`Falha ao processar mentor ${leader.name}:`, err);
-    // Fallback de contingência para não interromper a experiência do usuário
     return {
       leaderId: leader.id,
       thinking: "Análise estratégica em processamento profundo.",
