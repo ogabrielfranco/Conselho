@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { LEADERS, STRATEGIC_EXAMPLES } from './constants.ts';
 import { Leader, AppState } from './types.ts';
@@ -64,6 +63,7 @@ const App: React.FC = () => {
     setError(null);
 
     try {
+      // Generate summary first for better UX context
       const summary = await summarizeProblem(state.problem);
       
       const responsePromises = state.selectedLeaders.map(leader => 
@@ -107,11 +107,13 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen transition-colors duration-500 selection:bg-amber-500/30">
+      {/* Dynamic Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-amber-500/5 dark:bg-amber-500/5 blur-[120px] rounded-full animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-blue-500/5 dark:bg-blue-500/5 blur-[140px] rounded-full" />
       </div>
 
+      {/* Navigation */}
       <header className="sticky top-0 z-50 border-b border-zinc-200 dark:border-white/5 bg-white/80 dark:bg-[#050505]/80 backdrop-blur-2xl">
         <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
           <div 
@@ -122,8 +124,8 @@ const App: React.FC = () => {
               <Compass className="text-amber-500 w-6 h-6 group-hover:rotate-45 transition-transform" />
             </div>
             <div>
-              <h1 className="font-serif text-2xl tracking-tighter text-zinc-900 dark:text-white">Conselho</h1>
-              <div className="flex items-center space-x-2">
+              <h1 className="font-serif text-2xl tracking-tighter text-zinc-900 dark:text-white leading-none">Conselho</h1>
+              <div className="flex items-center space-x-2 mt-1">
                 <span className="h-1 w-1 bg-amber-500 rounded-full" />
                 <p className="text-[9px] text-zinc-500 uppercase tracking-[0.3em] font-black">Strategic Advisory Hub</p>
               </div>
@@ -192,6 +194,7 @@ const App: React.FC = () => {
               ))}
             </div>
 
+            {/* Controller */}
             <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 w-full max-w-3xl px-6">
               <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-3xl border border-zinc-200 dark:border-white/10 p-5 rounded-[40px] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.9)] flex flex-col sm:flex-row items-center justify-between gap-6 transition-all duration-500">
                 <div className="flex items-center space-x-6 px-4">
@@ -251,6 +254,7 @@ const App: React.FC = () => {
               <p className="text-zinc-500 text-xl font-light">Seja brutalmente honesto. O Conselho precisa da verdade para agir.</p>
             </div>
 
+            {/* Exemplos Inspiracionais */}
             <div className="space-y-6">
               <div className="flex items-center space-x-3">
                 <Lightbulb size={14} className="text-amber-500" />

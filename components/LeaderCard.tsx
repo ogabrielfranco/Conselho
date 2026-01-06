@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Leader } from '../types';
+import { Leader } from '../types.ts';
 import { CheckCircle2 } from 'lucide-react';
 
 interface LeaderCardProps {

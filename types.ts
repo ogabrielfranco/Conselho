@@ -1,5 +1,4 @@
-
-export type LeaderCategory = 'Business Global' | 'Business Brasil' | 'Militar/Político' | 'Direitos Civis' | 'Visionários' | 'Outros';
+export type LeaderCategory = 'Business Global' | 'Business Brasil' | 'Marketing & Estratégia' | 'Militar/Político' | 'Direitos Civis' | 'Visionários' | 'Outros';
 
 export interface Leader {
   id: string;
