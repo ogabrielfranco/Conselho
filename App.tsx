@@ -3,20 +3,20 @@ import { LEADERS, STRATEGIC_EXAMPLES } from './constants.ts';
 import { Leader, AppState } from './types.ts';
 import { LeaderButton } from './components/LeaderButton.tsx';
 import { ResultsView } from './components/ResultsView.tsx';
+import { ChatView } from './components/ChatView.tsx';
 import { generateLeaderAdvice, summarizeProblem } from './services/geminiService.ts';
 import { 
   ChevronRight, 
   ArrowLeft, 
-  Sparkles, 
   Loader2,
   AlertCircle,
   TrendingUp,
   BrainCircuit,
-  Globe,
   Compass,
   Moon,
   Sun,
-  Lightbulb
+  Lightbulb,
+  Info
 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -28,6 +28,7 @@ const App: React.FC = () => {
     responses: [],
     isLoading: false,
     step: 'selection',
+    activeMentor: null,
   });
 
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +64,6 @@ const App: React.FC = () => {
     setError(null);
 
     try {
-      // Generate summary first for better UX context
       const summary = await summarizeProblem(state.problem);
       
       const responsePromises = state.selectedLeaders.map(leader => 
@@ -86,6 +86,15 @@ const App: React.FC = () => {
     }
   };
 
+  const handleStartChat = (leader: Leader) => {
+    setState(prev => ({
+      ...prev,
+      activeMentor: leader,
+      step: 'chat'
+    }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const reset = () => {
     setState({
       selectedLeaders: [],
@@ -94,6 +103,7 @@ const App: React.FC = () => {
       responses: [],
       isLoading: false,
       step: 'selection',
+      activeMentor: null,
     });
     setError(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -107,19 +117,14 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen transition-colors duration-500 selection:bg-amber-500/30">
-      {/* Dynamic Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-amber-500/5 dark:bg-amber-500/5 blur-[120px] rounded-full animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-blue-500/5 dark:bg-blue-500/5 blur-[140px] rounded-full" />
       </div>
 
-      {/* Navigation */}
       <header className="sticky top-0 z-50 border-b border-zinc-200 dark:border-white/5 bg-white/80 dark:bg-[#050505]/80 backdrop-blur-2xl">
         <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
-          <div 
-            className="flex items-center space-x-4 cursor-pointer group" 
-            onClick={reset}
-          >
+          <div className="flex items-center space-x-4 cursor-pointer group" onClick={reset}>
             <div className="w-12 h-12 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-2xl flex items-center justify-center transition-all group-hover:border-amber-500/50 group-hover:shadow-[0_0_20px_rgba(245,158,11,0.2)]">
               <Compass className="text-amber-500 w-6 h-6 group-hover:rotate-45 transition-transform" />
             </div>
@@ -136,7 +141,6 @@ const App: React.FC = () => {
             <button 
               onClick={toggleTheme}
               className="p-3 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 text-zinc-500 dark:text-zinc-400 hover:text-amber-500 dark:hover:text-amber-500 transition-all shadow-sm"
-              title="Alternar Tema"
             >
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
@@ -165,9 +169,24 @@ const App: React.FC = () => {
               <h2 className="text-6xl md:text-8xl font-serif text-zinc-900 dark:text-white leading-[0.95] tracking-tighter">
                 Quem deve <span className="italic text-zinc-400 dark:text-zinc-600">decidir</span> por você?
               </h2>
-              <p className="text-zinc-500 dark:text-zinc-500 text-xl leading-relaxed max-w-2xl font-light">
-                Escolha até três mentores históricos. A convergência de suas metodologias criará um plano de ação definitivo para seu desafio atual.
-              </p>
+              
+              <div className="space-y-6">
+                <p className="text-zinc-500 dark:text-zinc-500 text-xl leading-relaxed max-w-2xl font-light">
+                  Escolha até três mentores históricos ou clique no <span className="text-amber-500 font-black">ícone de chat</span> em qualquer card para uma mentoria direta.
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4 p-5 rounded-3xl bg-amber-500/5 border border-amber-500/10 max-w-4xl">
+                  <div className="flex items-center space-x-2 text-amber-500 shrink-0">
+                    <Info size={16} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Guia do Conselho</span>
+                  </div>
+                  <div className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
+                    <span className="font-bold text-amber-600 dark:text-amber-500">Poder/Política:</span> Robert Greene ou Sun Tzu. | 
+                    <span className="font-bold text-amber-600 dark:text-amber-500 ml-2">Planejamento:</span> Napoleon Hill ou Peter Drucker. | 
+                    <span className="font-bold text-amber-600 dark:text-amber-500 ml-2">Vida Pessoal:</span> Clarice Lispector ou Viktor Frankl.
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-32 pb-48">
@@ -186,6 +205,7 @@ const App: React.FC = () => {
                         leader={leader}
                         isSelected={state.selectedLeaders.some(l => l.id === leader.id)}
                         onSelect={toggleLeader}
+                        onDirectChat={handleStartChat}
                         disabled={state.selectedLeaders.length >= 3}
                       />
                     ))}
@@ -194,7 +214,6 @@ const App: React.FC = () => {
               ))}
             </div>
 
-            {/* Controller */}
             <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 w-full max-w-3xl px-6">
               <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-3xl border border-zinc-200 dark:border-white/10 p-5 rounded-[40px] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.9)] flex flex-col sm:flex-row items-center justify-between gap-6 transition-all duration-500">
                 <div className="flex items-center space-x-6 px-4">
@@ -228,12 +247,7 @@ const App: React.FC = () => {
                     setState(prev => ({ ...prev, step: 'input' }));
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className={`
-                    w-full sm:w-auto h-16 px-10 rounded-[30px] flex items-center justify-center space-x-4 font-black uppercase tracking-widest text-xs transition-all duration-500
-                    ${state.selectedLeaders.length > 0 
-                      ? 'bg-zinc-900 dark:bg-white text-white dark:text-black hover:scale-[1.03] shadow-2xl shadow-black/10 dark:shadow-white/10' 
-                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed'}
-                  `}
+                  className={`w-full sm:w-auto h-16 px-10 rounded-[30px] flex items-center justify-center space-x-4 font-black uppercase tracking-widest text-xs transition-all duration-500 ${state.selectedLeaders.length > 0 ? 'bg-zinc-900 dark:bg-white text-white dark:text-black hover:scale-[1.03] shadow-2xl' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed'}`}
                 >
                   <span>Definir Desafio</span>
                   <ChevronRight size={18} />
@@ -251,10 +265,9 @@ const App: React.FC = () => {
                 <span>Briefing de Alto Nível</span>
               </div>
               <h2 className="text-6xl md:text-7xl font-serif text-zinc-900 dark:text-white tracking-tighter">O que está em jogo?</h2>
-              <p className="text-zinc-500 text-xl font-light">Seja brutalmente honesto. O Conselho precisa da verdade para agir.</p>
+              <p className="text-zinc-500 text-xl font-light">O Conselho exige a verdade crua para fornecer a estratégia certa.</p>
             </div>
 
-            {/* Exemplos Inspiracionais */}
             <div className="space-y-6">
               <div className="flex items-center space-x-3">
                 <Lightbulb size={14} className="text-amber-500" />
@@ -265,7 +278,7 @@ const App: React.FC = () => {
                   <button
                     key={i}
                     onClick={() => selectExample(example)}
-                    className="text-left px-5 py-3 rounded-2xl bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400 hover:border-amber-500/50 hover:text-amber-600 dark:hover:text-amber-500 transition-all shadow-sm max-w-xs line-clamp-2"
+                    className="text-left px-5 py-3 rounded-2xl bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400 hover:border-amber-500/50 hover:text-amber-600 transition-all shadow-sm max-w-xs line-clamp-2"
                   >
                     {example}
                   </button>
@@ -281,17 +294,6 @@ const App: React.FC = () => {
                 placeholder="Qual o impasse que impede seu próximo nível?"
                 className="relative w-full h-[450px] bg-white dark:bg-zinc-950/40 border border-zinc-200 dark:border-white/5 rounded-[48px] p-12 text-3xl text-zinc-900 dark:text-white placeholder-zinc-300 dark:placeholder-zinc-800 focus:outline-none focus:border-amber-500/30 transition-all resize-none font-serif italic leading-relaxed shadow-lg"
               />
-              <div className="absolute bottom-12 right-12 flex items-center space-x-6 bg-white/60 dark:bg-black/40 backdrop-blur-md p-4 rounded-3xl border border-zinc-200 dark:border-white/5">
-                <div className="flex -space-x-3">
-                  {state.selectedLeaders.map(l => (
-                    <div key={l.id} className="w-10 h-10 rounded-full bg-zinc-900 border-2 border-white dark:border-zinc-950 flex items-center justify-center text-[10px] font-black text-amber-500">
-                      {l.name.charAt(0)}
-                    </div>
-                  ))}
-                </div>
-                <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800" />
-                <span className="text-[9px] text-zinc-400 dark:text-zinc-500 font-black uppercase tracking-[0.2em]">Painel Ativo</span>
-              </div>
             </div>
 
             {error && (
@@ -305,12 +307,7 @@ const App: React.FC = () => {
               <button
                 disabled={!state.problem.trim() || state.isLoading}
                 onClick={handleStartConsultation}
-                className={`
-                  relative h-24 px-20 rounded-[40px] font-black uppercase tracking-[0.3em] text-sm transition-all duration-700
-                  ${!state.problem.trim() || state.isLoading
-                    ? 'bg-zinc-100 dark:bg-zinc-900 text-zinc-400 dark:text-zinc-700 cursor-not-allowed'
-                    : 'bg-amber-500 text-white dark:text-black hover:scale-105 shadow-[0_20px_50px_rgba(245,158,11,0.2)]'}
-                `}
+                className={`relative h-24 px-20 rounded-[40px] font-black uppercase tracking-[0.3em] text-sm transition-all duration-700 ${!state.problem.trim() || state.isLoading ? 'bg-zinc-100 dark:bg-zinc-900 text-zinc-400 cursor-not-allowed' : 'bg-amber-500 text-white dark:text-black hover:scale-105 shadow-2xl'}`}
               >
                 {state.isLoading ? (
                   <div className="flex items-center space-x-6">
@@ -332,8 +329,17 @@ const App: React.FC = () => {
               responses={state.responses}
               problem={state.problem}
               problemSummary={state.problemSummary}
+              onStartChat={handleStartChat}
             />
           </div>
+        )}
+
+        {state.step === 'chat' && state.activeMentor && (
+          <ChatView 
+            leader={state.activeMentor}
+            problem={state.problem}
+            onBack={() => setState(prev => ({ ...prev, step: state.problem ? 'results' : 'selection' }))}
+          />
         )}
       </main>
     </div>
